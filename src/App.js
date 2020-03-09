@@ -1,43 +1,68 @@
-import React, {useEffect, useState} from 'react'
+import React, {useState, useEffect} from 'react'
 import Mousetrap from 'mousetrap'
 import './App.css'
 
+//#region preload
+const WIDTH = 10
+const HEIGHT = 10
+const STATUS = {
+  'ready': 1,
+  'playing': 2,
+  'end': 3
+}
+const TYPE = {
+  'empty': 1,
+  'cat': 2,
+  'food': 3
+}
+const DIRECTION = {
+  'upward': 1,
+  'right': 2,
+  'downward': 3,
+  'left': 4
+}
+const INTERVAL = 1000
+
+let catList
+let direction
+let moveTimer
+//#endregion preload
+
 function App() {
-  //#region ready
-  const WIDTH = 10
-  const HEIGHT = 10
-  const STATUS = {
-    'ready': 1,
-    'playing': 2,
-    'end': 3
-  }
-  const TYPE = {
-    'empty': 1,
-    'cat': 2,
-    'food': 3
-  }
-  const DIRECTION = {
-    'upward': 1,
-    'right': 2,
-    'downward': 3,
-    'left': 4
-  }
-  const INTERVAL = 1000
-  let status = STATUS['playing']
-  let [matrix, setMatrix] = useState(Array.apply(null, Array(WIDTH)).map(() => Array.apply(null, Array(HEIGHT)).map(() => TYPE['empty']))) // 创建二维矩阵
-  let direction = DIRECTION['right']
-  let catList = null
-  let moveTimer
-  //#endregion ready
+  //#region init
+  let [status, setStatus] = useState(null)
+  let [matrix, setMatrix] = useState(null) // 创建二维矩阵
+  //#endregion init
 
   //#region lifecycle
   useEffect(() => {
-    createCat()
-    createFood()
-    createTimer()
-    createKeyEvent()
+    ready()
     return () => reset()
   }, [])
+
+  function ready () {
+    setStatus(STATUS['ready'])
+    direction = DIRECTION['right']
+    createMatrix()
+    createCat()
+    createFood()
+  }
+
+  function start () {
+    setStatus(STATUS['playing'])
+    createTimer()
+    createKeyEvent()
+  }
+
+  function restart () {
+    ready()
+    start()
+  }
+
+  function die () {
+    setStatus(STATUS['end'])
+    reset()
+  }
 
   function reset () {
     clearTimer()
@@ -47,11 +72,17 @@ function App() {
   function createTimer () {
     moveTimer = setInterval(() => {
       moveCat()
+        .catch(() => {})
     }, INTERVAL)
   }
 
   function clearTimer () {
-    clearInterval(moveTimer)
+    moveTimer && clearInterval(moveTimer)
+  }
+
+  function refreshTimer () {
+    clearTimer()
+    createTimer()
   }
 
   function createKeyEvent () {
@@ -72,8 +103,7 @@ function App() {
       Mousetrap.bind(key.value, () => {
         moveCat(DIRECTION[key.direction])
           .then(() => {
-            clearTimer()
-            createTimer()
+            refreshTimer()
           })
           .catch(() => {})
       })
@@ -86,6 +116,11 @@ function App() {
   //#endregion lifecycle
 
   //#region matrix
+  function createMatrix () {
+    matrix = Array.apply(null, Array(WIDTH)).map(() => Array.apply(null, Array(HEIGHT)).map(() => TYPE['empty']))
+    setMatrix(matrix)
+  }
+
   function updateCoordinate (x, y, value) {
     matrix[y][x] = value
     setMatrix([...matrix])
@@ -164,10 +199,10 @@ function App() {
         break
     }
     if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
-      die()
-      return
+      die() // fixme auto over
+      return Promise.reject()
     }
-    if (matrix[y][x] === TYPE['food']) {
+    if (matrix[y][x] === TYPE['food']) {  // todo limit cat's length
       catList.unshift({x, y})
       createFood()
     } else {
@@ -182,7 +217,7 @@ function App() {
   function createFood () {
     const x = Math.floor(Math.random() * WIDTH)
     const y = Math.floor(Math.random() * HEIGHT)
-    if (matrix[x][y] === TYPE['empty']) {
+    if (matrix[y][x] === TYPE['empty']) {
       updateCoordinate(x, y, TYPE['food'])
     } else {
       createFood()
@@ -190,31 +225,30 @@ function App() {
   }
   //#endregion cat
 
-  //#region status
-  function die () {
-    status = STATUS['end']
-    clearTimer()
-  }
-  //#endregion status
-
   return (
     <div className="App">
+      <button onClick={start}>start</button>
+      <button onClick={restart}>restart</button>
       {/*元素顺序不会发生变化，且无唯一id，所以使用index作为key*/}
-      <table>
-        <tbody>
-        { matrix.map((row, rowIndex) => {
-          return (
-            <tr key={rowIndex}>
-              { row.map((col, colIndex) => {
-                return (
-                  <td key={colIndex}>{col}</td>
-                )
-              })}
-            </tr>
-          )
-        })}
-        </tbody>
-      </table>
+      {
+        matrix &&
+        <table>
+          <tbody>
+          { matrix.map((row, rowIndex) => {
+            return (
+              <tr key={rowIndex}>
+                { row.map((col, colIndex) => {
+                  return (
+                    <td key={colIndex}>{col}</td>
+                  )
+                })}
+              </tr>
+            )
+          })}
+          </tbody>
+        </table>
+      }
+      <p>{status === 1 ? '未开始' : status === 2 ? '游戏中' : '游戏结束'}</p>
     </div>
   )
 }
