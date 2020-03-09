@@ -176,7 +176,7 @@ function App() {
 
   function moveCat (newDirection) {
     if (newDirection) {
-      if (Math.abs(newDirection - direction) === 2) return Promise.reject() // opposite direction
+      if (Math.abs(newDirection - direction) === 2) return Promise.reject('opposite') // opposite direction
       direction = newDirection
     }
     let x, y
@@ -199,8 +199,12 @@ function App() {
         break
     }
     if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
-      die() // fixme auto over
-      return Promise.reject()
+      die()
+      return Promise.reject('over')
+    }
+    if (matrix[y][x] === TYPE['cat']) {
+      die()
+      return Promise.reject('eatItself')
     }
     if (matrix[y][x] === TYPE['food']) {  // todo limit cat's length
       catList.unshift({x, y})
