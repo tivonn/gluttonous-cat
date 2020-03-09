@@ -22,6 +22,7 @@ const DIRECTION = {
   'left': 4
 }
 const INTERVAL = 1000
+const MAX_LENGTH = 30
 
 let catList
 let direction
@@ -139,9 +140,7 @@ function App() {
     this.head = null
     this.tail = null
     this.length = 0
-    if (props) {
-      this.unshift(props)
-    }
+    props && this.unshift(props)
   }
 
   CatList.prototype.unshift = function (props) {
@@ -202,16 +201,19 @@ function App() {
       die()
       return Promise.reject('over')
     }
-    if (matrix[y][x] === TYPE['cat']) {
-      die()
-      return Promise.reject('eatItself')
-    }
-    if (matrix[y][x] === TYPE['food']) {  // todo limit cat's length
-      catList.unshift({x, y})
-      createFood()
-    } else {
-      catList.unshift({x, y})
-      catList.pop()
+    switch (matrix[y][x]) {
+      case TYPE['empty']:
+        catList.unshift({x, y})
+        catList.pop()
+        break
+      case TYPE['cat']:
+        die()
+        return Promise.reject('eatItself')
+      case TYPE['food']:
+        catList.unshift({x, y})
+        ;(catList.length > MAX_LENGTH) && catList.pop()
+        createFood()
+        break
     }
     return Promise.resolve()
   }
