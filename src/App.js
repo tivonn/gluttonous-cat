@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react'
+import Mousetrap from 'mousetrap'
 import './App.css'
 
 function App() {
@@ -11,16 +12,17 @@ function App() {
     'end': 3
   }
   const TYPE = {
-    'empty': 0,
-    'cat': 1,
-    'food': 2
+    'empty': 1,
+    'cat': 2,
+    'food': 3
   }
   const DIRECTION = {
-    'top': 0,
-    'right': 1,
-    'bottom': 2,
-    'left': 3
+    'upward': 1,
+    'right': 2,
+    'downward': 3,
+    'left': 4
   }
+  const INTERVAL = 1000
   let status = STATUS['playing']
   let [matrix, setMatrix] = useState(Array.apply(null, Array(WIDTH)).map(() => Array.apply(null, Array(HEIGHT)).map(() => TYPE['empty']))) // 创建二维矩阵
   let direction = DIRECTION['right']
@@ -32,13 +34,55 @@ function App() {
   useEffect(() => {
     createCat()
     createFood()
+    createTimer()
+    createKeyEvent()
+    return () => reset()
+  }, [])
+
+  function reset () {
+    clearTimer()
+    clearKeyEvent()
+  }
+
+  function createTimer () {
     moveTimer = setInterval(() => {
       moveCat()
-    }, 1000)
-    return () => {
-      clearInterval(moveTimer)
-    }
-  }, [])
+    }, INTERVAL)
+  }
+
+  function clearTimer () {
+    clearInterval(moveTimer)
+  }
+
+  function createKeyEvent () {
+    const keys = [{
+      value: ['up', 'w'],
+      direction: 'upward'
+    }, {
+      value: ['right', 'd'],
+      direction: 'right'
+    }, {
+      value: ['down', 's'],
+      direction: 'downward'
+    }, {
+      value: ['left', 'a'],
+      direction: 'left'
+    }]
+    keys.forEach(key => {
+      Mousetrap.bind(key.value, () => {
+        moveCat(DIRECTION[key.direction])
+          .then(() => {
+            clearTimer()
+            createTimer()
+          })
+          .catch(() => {})
+      })
+    })
+  }
+
+  function clearKeyEvent () {
+    Mousetrap.reset()
+  }
   //#endregion lifecycle
 
   //#region matrix
@@ -52,11 +96,13 @@ function App() {
   function CatNode (props) {
     this.x = props.x
     this.y = props.y
+    this.prev = null
     this.next = null
   }
 
   function CatList (props) {
     this.head = null
+    this.tail = null
     this.length = 0
     if (props) {
       this.unshift(props)
@@ -65,23 +111,23 @@ function App() {
 
   CatList.prototype.unshift = function (props) {
     let node = new CatNode(props)
+    this.head && (this.head.prev = node)
     node.next = this.head
     this.head = node
-    this.length++
     updateCoordinate(this.head['x'], this.head['y'], TYPE['cat'])
+    !this.tail && (this.tail = node)
+    this.length++
   }
 
-  CatList.prototype.shift = function () {
-    let current = this.head
-    if (!current) return
-    if (this.size() > 1) {
-      while (current.next && current.next.next) {
-        current = current.next
-      }
+  CatList.prototype.pop = function () {
+    if (!this.tail) return
+    updateCoordinate(this.tail['x'], this.tail['y'], TYPE['empty'])
+    this.tail = this.tail.prev
+    if (this.tail) {
+      this.tail.next = null
+    } else {
+      this.head = null
     }
-    let tail = current.next
-    updateCoordinate(tail['x'], tail['y'], TYPE['empty'])
-    current.next = null
     this.length--
   }
 
@@ -93,10 +139,14 @@ function App() {
     catList = new CatList({x: 4, y: 3})
   }
 
-  function moveCat () {
+  function moveCat (newDirection) {
+    if (newDirection) {
+      if (Math.abs(newDirection - direction) === 2) return Promise.reject() // opposite direction
+      direction = newDirection
+    }
     let x, y
     switch (direction) {
-      case DIRECTION['top']:
+      case DIRECTION['upward']:
         x = catList.head['x']
         y = catList.head['y'] - 1
         break
@@ -104,7 +154,7 @@ function App() {
         x = catList.head['x'] + 1
         y = catList.head['y']
         break
-      case DIRECTION['bottom']:
+      case DIRECTION['downward']:
         x = catList.head['x']
         y = catList.head['y'] + 1
         break
@@ -117,8 +167,14 @@ function App() {
       die()
       return
     }
-    catList.unshift({x, y})
-    catList.shift()
+    if (matrix[y][x] === TYPE['food']) {
+      catList.unshift({x, y})
+      createFood()
+    } else {
+      catList.unshift({x, y})
+      catList.pop()
+    }
+    return Promise.resolve()
   }
   //#endregion cat
 
@@ -137,7 +193,7 @@ function App() {
   //#region status
   function die () {
     status = STATUS['end']
-    clearInterval(moveTimer)
+    clearTimer()
   }
   //#endregion status
 
