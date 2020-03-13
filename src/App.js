@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react'
 import Mousetrap from 'mousetrap'
-import './App.css'
+import './App.scss'
+import Icon from './components/Icon.js'
 
 //#region preload
 const WIDTH = 10
@@ -32,7 +33,7 @@ let moveTimer
 function App() {
   //#region init
   let [status, setStatus] = useState(null)
-  let [matrix, setMatrix] = useState(null) // 创建二维矩阵
+  let [matrix, setMatrix] = useState(null)
   //#endregion init
 
   //#region lifecycle
@@ -233,19 +234,34 @@ function App() {
 
   return (
     <div className="App">
-      <button onClick={start}>start</button>
-      <button onClick={restart}>restart</button>
+      <div className="operations">
+        <button onClick={start}>start</button>
+        <button onClick={restart}>restart</button>
+      </div>
       {/*元素顺序不会发生变化，且无唯一id，所以使用index作为key*/}
       {
         matrix &&
-        <table>
+        <table className="matrix">
           <tbody>
           { matrix.map((row, rowIndex) => {
             return (
-              <tr key={rowIndex}>
+              <tr key={rowIndex} className="row">
                 { row.map((col, colIndex) => {
                   return (
-                    <td key={colIndex}>{col}</td>
+                    <td key={colIndex} className="diamond">
+                      {(() => {
+                        switch (col) {
+                          case TYPE['empty']:
+                            return <span></span>
+                          case TYPE['cat']:
+                            return <Icon svgId={'iconArtboard'} size={'24'}></Icon>
+                          case TYPE['food']:
+                            return <Icon svgId={'iconaguoguaguatubiao-yulei-'} size={'24px'}></Icon>
+                          default:
+                            return <span></span>
+                        }
+                      })()}
+                    </td>
                   )
                 })}
               </tr>
@@ -254,7 +270,15 @@ function App() {
           </tbody>
         </table>
       }
-      <p>{status === 1 ? '未开始' : status === 2 ? '游戏中' : '游戏结束'}</p>
+      <p className="status">
+        {
+          status === 1
+          ? '未开始'
+          : status === 2
+            ? '游戏中'
+            : '游戏结束'
+        }
+      </p>
     </div>
   )
 }

@@ -1,0 +1,29 @@
+.matrix {
+  border: 3px solid #3bac66;
+  border-collapse: collapse;
+}
+
+.row {
+  &:nth-child(odd) {
+    & > :nth-child(odd) {
+      background-color: #7bd29c;
+    }
+    & > :nth-child(even) {
+      background-color: #55c580;
+    }
+  }
+  &:nth-child(even) {
+    & > :nth-child(odd) {
+      background-color: #55c580;
+    }
+    & > :nth-child(even) {
+      background-color: #7bd29c;
+    }
+  }
+}
+
+.diamond {
+  width: 36px;
+  height: 36px;
+  text-align: center;
+}

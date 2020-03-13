@@ -1,0 +1,23 @@
+{
+  "id": "1688903",
+  "name": "gluttonous-cat",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "3574387",
+      "name": "猫",
+      "font_class": "Artboard",
+      "unicode": "edc9",
+      "unicode_decimal": 60873
+    },
+    {
+      "icon_id": "5169747",
+      "name": "【阿果瓜瓜】图标-鱼类-01",
+      "font_class": "aguoguaguatubiao-yulei-",
+      "unicode": "e608",
+      "unicode_decimal": 58888
+    }
+  ]
+}
