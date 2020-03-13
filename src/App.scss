@@ -1,29 +1,82 @@
-.matrix {
-  border: 3px solid #3bac66;
-  border-collapse: collapse;
-}
-
-.row {
-  &:nth-child(odd) {
-    & > :nth-child(odd) {
-      background-color: #7bd29c;
+.app {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #55c580;
+  .container {
+    width: 500px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .matrix {
+    width: 100%;
+    border: 3px solid #3bac66;
+    border-collapse: collapse;
+  }
+  .row {
+    &:nth-child(odd) {
+      & > :nth-child(odd) {
+        background-color: #7bd29c;
+      }
+      & > :nth-child(even) {
+        background-color: #55c580;
+      }
     }
-    & > :nth-child(even) {
-      background-color: #55c580;
+    &:nth-child(even) {
+      & > :nth-child(odd) {
+        background-color: #55c580;
+      }
+      & > :nth-child(even) {
+        background-color: #7bd29c;
+      }
     }
   }
-  &:nth-child(even) {
-    & > :nth-child(odd) {
-      background-color: #55c580;
-    }
-    & > :nth-child(even) {
-      background-color: #7bd29c;
+  .diamond {
+    width: 10%;
+    height: 50px;
+    text-align: center;
+  }
+  .bottom {
+    height: 44px;
+    line-height: 44px;
+    background-color: #7bd29c;
+    border: 2px solid #3bac66;
+    border-top: none;
+  }
+  .score, .status {
+    width: calc(50% - 1px);
+    display: inline-block;
+    text-align: center;
+  }
+  .division {
+    width: 2px;
+    display: inline-block;
+    position: relative;
+    bottom: 2.5px;
+    color: #fff;
+  }
+  .score {
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+  }
+  .status {
+    .iconfont {
+      cursor: pointer;
     }
   }
-}
-
-.diamond {
-  width: 36px;
-  height: 36px;
-  text-align: center;
+  .start {
+    position: relative;
+    top: 2px;
+  }
+  .stop {
+    position: relative;
+    top: 2px;
+  }
+  .restart {
+    position: relative;
+    top: 2px;
+  }
 }

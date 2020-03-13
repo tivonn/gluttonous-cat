@@ -2,6 +2,9 @@ import React, {useState, useEffect} from 'react'
 import Mousetrap from 'mousetrap'
 import './App.scss'
 import Icon from './components/Icon.js'
+import catMusic from './assets/music/cat.mp3'
+import eatMusic from './assets/music/eat.mp3'
+import dieMusic from './assets/music/die.mp3'
 
 //#region preload
 const WIDTH = 10
@@ -9,7 +12,8 @@ const HEIGHT = 10
 const STATUS = {
   'ready': 1,
   'playing': 2,
-  'end': 3
+  'stop': 3,
+  'end': 4
 }
 const TYPE = {
   'empty': 1,
@@ -24,6 +28,11 @@ const DIRECTION = {
 }
 const INTERVAL = 1000
 const MAX_LENGTH = 30
+const MUSIC = {
+  'cat': new Audio(catMusic),
+  'eat': new Audio(eatMusic),
+  'die': new Audio(dieMusic)
+}
 
 let catList
 let direction
@@ -34,6 +43,7 @@ function App() {
   //#region init
   let [status, setStatus] = useState(null)
   let [matrix, setMatrix] = useState(null)
+  let [score, setScore] = useState(0)
   //#endregion init
 
   //#region lifecycle
@@ -44,6 +54,8 @@ function App() {
 
   function ready () {
     setStatus(STATUS['ready'])
+    score = 0
+    setScore(score)
     direction = DIRECTION['right']
     createMatrix()
     createCat()
@@ -52,23 +64,30 @@ function App() {
 
   function start () {
     setStatus(STATUS['playing'])
+    makeSound('cat')
     createTimer()
     createKeyEvent()
   }
 
-  function restart () {
-    ready()
-    start()
+  function stop () {
+    setStatus(STATUS['stop'])
+    reset()
   }
 
   function die () {
     setStatus(STATUS['end'])
+    makeSound('die')
     reset()
   }
 
   function reset () {
     clearTimer()
     clearKeyEvent()
+  }
+
+  function restart () {
+    ready()
+    start()
   }
 
   function createTimer () {
@@ -177,7 +196,10 @@ function App() {
   function moveCat (newDirection) {
     if (newDirection) {
       if (Math.abs(newDirection - direction) === 2) return Promise.reject('opposite') // opposite direction
-      direction = newDirection
+      if (direction !== newDirection) {
+        makeSound('cat')
+        direction = newDirection
+      }
     }
     let x, y
     switch (direction) {
@@ -197,6 +219,8 @@ function App() {
         x = catList.head['x'] - 1
         y = catList.head['y']
         break
+      default:
+        break
     }
     if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
       die()
@@ -213,7 +237,12 @@ function App() {
       case TYPE['food']:
         catList.unshift({x, y})
         ;(catList.length > MAX_LENGTH) && catList.pop()
+        makeSound('eat')
+        score++
+        setScore(score)
         createFood()
+        break
+      default:
         break
     }
     return Promise.resolve()
@@ -232,53 +261,79 @@ function App() {
   }
   //#endregion cat
 
+  //#region music
+  function makeSound (type) {
+    MUSIC[type].play()
+  }
+  //#endregion food
+
   return (
-    <div className="App">
-      <div className="operations">
-        <button onClick={start}>start</button>
-        <button onClick={restart}>restart</button>
-      </div>
-      {/*元素顺序不会发生变化，且无唯一id，所以使用index作为key*/}
-      {
-        matrix &&
-        <table className="matrix">
-          <tbody>
-          { matrix.map((row, rowIndex) => {
-            return (
-              <tr key={rowIndex} className="row">
-                { row.map((col, colIndex) => {
-                  return (
-                    <td key={colIndex} className="diamond">
-                      {(() => {
-                        switch (col) {
-                          case TYPE['empty']:
-                            return <span></span>
-                          case TYPE['cat']:
-                            return <Icon svgId={'iconArtboard'} size={'24'}></Icon>
-                          case TYPE['food']:
-                            return <Icon svgId={'iconaguoguaguatubiao-yulei-'} size={'24px'}></Icon>
-                          default:
-                            return <span></span>
-                        }
-                      })()}
-                    </td>
-                  )
-                })}
-              </tr>
-            )
-          })}
-          </tbody>
-        </table>
-      }
-      <p className="status">
+    <div className="app">
+      <div className="container">
+        {/*元素顺序不会发生变化，且无唯一id，所以使用index作为key*/}
         {
-          status === 1
-          ? '未开始'
-          : status === 2
-            ? '游戏中'
-            : '游戏结束'
+          matrix &&
+          <table className="matrix">
+            <tbody>
+            { matrix.map((row, rowIndex) => {
+              return (
+                <tr key={rowIndex} className="row">
+                  { row.map((col, colIndex) => {
+                    return (
+                      <td key={colIndex} className="diamond">
+                        {(() => {
+                          switch (col) {
+                            case TYPE['empty']:
+                              return ''
+                            case TYPE['cat']:
+                              return <Icon svgId='iconArtboard' size='25px' title='cat'></Icon>
+                            case TYPE['food']:
+                              return <Icon svgId='iconaguoguaguatubiao-yulei-' size='26px' title='food'></Icon>
+                            default:
+                              return ''
+                          }
+                        })()}
+                      </td>
+                    )
+                  })}
+                </tr>
+              )
+            })}
+            </tbody>
+          </table>
         }
-      </p>
+        <div className="bottom">
+          <span className="score">{score}</span>
+          <span className="division">|</span>
+          <span className="status">
+            {(() => {
+              switch (status) {
+                case STATUS['ready']:
+                case STATUS['stop']:
+                  return (
+                    <span onClick={start}>
+                      <Icon svgId='iconkaishi' size='23px' color='#fff' title='开始游戏' className="start"></Icon>
+                    </span>
+                  )
+                case STATUS['playing']:
+                  return (
+                    <span onClick={stop}>
+                      <Icon svgId='iconzanting_huaban' size='23px' color='#fff' title='暂停游戏' className="stop"></Icon>
+                    </span>
+                  )
+                case STATUS['end']:
+                  return (
+                    <span onClick={restart}>
+                      <Icon svgId='iconshuaxin1' size='22px' color='#fff' title='重新开始' className="restart"></Icon>
+                    </span>
+                  )
+                default:
+                  return ''
+              }
+            })()}
+          </span>
+        </div>
+      </div>
     </div>
   )
 }

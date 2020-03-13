@@ -7,10 +7,11 @@ function Icon (props) {
     svgId,
     size = '16px',
     color = '#999',
-    title
+    title,
+    className
   } = props
   return (
-    <svg className="icon" style={{width: size, height: size, fill: color}} aria-hidden="true">
+    <svg className={`iconfont ${className}`} style={{width: size, height: size, fill: color}} aria-hidden="true">
       {title && <title>{ title }</title>}
       <use xlinkHref={`#${svgId}`}></use>
     </svg>
