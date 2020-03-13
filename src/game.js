@@ -26,7 +26,7 @@ const DIRECTION = {
   'downward': 3,
   'left': 4
 }
-const INTERVAL = 1000
+const INTERVAL = 220
 const MAX_LENGTH = 30
 const MUSIC = {
   'cat': new Audio(catMusic),
