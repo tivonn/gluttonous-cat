@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import Mousetrap from 'mousetrap'
-import './App.scss'
+import './game.scss'
 import Icon from './components/Icon.js'
 import catMusic from './assets/music/cat.mp3'
 import eatMusic from './assets/music/eat.mp3'
@@ -39,7 +39,7 @@ let direction
 let moveTimer
 //#endregion preload
 
-function App() {
+function Game() {
   //#region init
   let [status, setStatus] = useState(null)
   let [matrix, setMatrix] = useState(null)
@@ -268,40 +268,61 @@ function App() {
   //#endregion food
 
   return (
-    <div className="app">
+    <div className="game">
       <div className="container">
-        {/*元素顺序不会发生变化，且无唯一id，所以使用index作为key*/}
-        {
-          matrix &&
-          <table className="matrix">
-            <tbody>
-            { matrix.map((row, rowIndex) => {
-              return (
-                <tr key={rowIndex} className="row">
-                  { row.map((col, colIndex) => {
-                    return (
-                      <td key={colIndex} className="diamond">
-                        {(() => {
-                          switch (col) {
-                            case TYPE['empty']:
-                              return ''
-                            case TYPE['cat']:
-                              return <Icon svgId='iconArtboard' size='25px' title='cat'></Icon>
-                            case TYPE['food']:
-                              return <Icon svgId='iconaguoguaguatubiao-yulei-' size='26px' title='food'></Icon>
-                            default:
-                              return ''
-                          }
-                        })()}
-                      </td>
-                    )
-                  })}
-                </tr>
-              )
-            })}
-            </tbody>
-          </table>
-        }
+        <div className="body">
+          {/*元素顺序不会发生变化，且无唯一id，所以使用index作为key*/}
+          {
+            matrix &&
+            <table className="matrix">
+              <tbody>
+              { matrix.map((row, rowIndex) => {
+                return (
+                  <tr key={rowIndex} className="row">
+                    { row.map((col, colIndex) => {
+                      return (
+                        <td key={colIndex} className="diamond">
+                          {(() => {
+                            switch (col) {
+                              case TYPE['empty']:
+                                return ''
+                              case TYPE['cat']:
+                                return <Icon svgId='iconArtboard' size='25px' title='cat'></Icon>
+                              case TYPE['food']:
+                                return <Icon svgId='iconaguoguaguatubiao-yulei-' size='26px' title='food'></Icon>
+                              default:
+                                return ''
+                            }
+                          })()}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })}
+              </tbody>
+            </table>
+          }
+          {
+            status !== STATUS['playing'] &&
+            <div className="cover">
+              <div>
+                <Icon svgId='iconArtboard' size='40px' title='cat'></Icon>
+                <p className="game-name">Gluttonous Cat</p>
+                {(() => {
+                  switch (status) {
+                    case STATUS['ready']:
+                      return ''
+                    case STATUS['stop']:
+                      return <span className="pause-text">PAUSE</span>
+                    case STATUS['end']:
+                      return <span className="end-text">GAME OVER</span>
+                  }
+                })()}
+              </div>
+            </div>
+          }
+        </div>
         <div className="bottom">
           <span className="score">{score}</span>
           <span className="division">|</span>
@@ -338,4 +359,4 @@ function App() {
   )
 }
 
-export default App
+export default Game
