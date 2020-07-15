@@ -2,7 +2,7 @@
 
 ## 项目介绍
 
-eat the food to make the cat stronger / 贪吃猫游戏
+贪吃猫游戏 / eat the food to make the cat stronger
 
 ## 游戏规则
 
